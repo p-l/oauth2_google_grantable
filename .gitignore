@@ -1,0 +1,11 @@
+.DS_Store
+*.gem
+.bundle
+Gemfile.lock
+pkg/*
+
+*.sqlite3-journal
+*.sqlite3
+*.log
+
+/tests/tmp
