@@ -25,7 +25,7 @@ module Devise
 
     def self.google_userinfo_for_token(token)
       begin
-        @@logger.error("Oauth2ProvidableGoogle => Getting information from user token: #{token}")
+        @@logger.debug("Oauth2ProvidableGoogle => Getting information from user token: #{token}")
         # Documentation on the API Call: https://developers.google.com/accounts/docs/OAuth2Login#userinfocall
         uri = URI.parse("https://www.googleapis.com/oauth2/v1/userinfo?access_token=#{token}")
         response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https', :verify_mode => OpenSSL::SSL::VERIFY_NONE) do |https|
@@ -34,14 +34,14 @@ module Devise
         if(response.is_a?(Net::HTTPOK))
           data = response.body
           json = JSON.parse(data)
-          @@logger.error("Oauth2ProvidableGoogle => Received user information: #{json}")
+          @@logger.debug("Oauth2ProvidableGoogle => Received user information: #{json}")
           return json
         else
-          @@logger.error("Oauth2ProvidableGoogle => Received wrong response code: #{response.code} body: #{response.body}")
+          @@logger.debug("Oauth2ProvidableGoogle => Received wrong response code: #{response.code} body: #{response.body}")
           return false
         end
       rescue => e
-        @@logger.error("Oauth2ProvidableGoogle => Could not authenticate with token: #{e}")
+        @@logger.debug("Oauth2ProvidableGoogle => Could not authenticate with token: #{e}")
         return false
       end
     end
