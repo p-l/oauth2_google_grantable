@@ -28,24 +28,22 @@ module Devise
         @@logger.error("Oauth2ProvidableGoogle => Getting information from user token: #{token}")
         # Documentation on the API Call: https://developers.google.com/accounts/docs/OAuth2Login#userinfocall
         uri = URI.parse("https://www.googleapis.com/oauth2/v1/userinfo?access_token=#{token}")
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        # Don't verify SSL
-        #http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-
-        request = Net::HTTP::Get.new(uri.request_uri)
-
-        response = http.request(request)
-        if(response.status == 200)
+        response = Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https', :verify_mode => OpenSSL::SSL::VERIFY_NONE) do |https|
+          https.get(uri.request_uri)
+        end
+        if(response.is_a?(Net::HTTPOK))
           data = response.body
           json = JSON.parse(data)
+          @@logger.error("Oauth2ProvidableGoogle => Received user information: #{json}")
           return json
+        else
+          @@logger.error("Oauth2ProvidableGoogle => Received wrong response code: #{response.code} body: #{response.body}")
+          return false
         end
       rescue => e
         @@logger.error("Oauth2ProvidableGoogle => Could not authenticate with token: #{e}")
         return false
       end
-
     end
 
     class Railties < ::Rails::Railtie

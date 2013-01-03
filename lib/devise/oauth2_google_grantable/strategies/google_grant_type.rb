@@ -11,18 +11,23 @@ module Devise
         Devise::Oauth2ProvidableGoogle.logger.debug("Oauth2GoogleGrantTypeStrategy => Getting user information for token:\"#{params[:google_token]}\"")
         google_user = Devise::Oauth2ProvidableGoogle.google_userinfo_for_token(params[:google_token])
 
-        if(google_user && google_user["email"] && google_user["verified_email"])
-          Devise::Oauth2ProvidableGoogle.logger.debug("Oauth2GoogleGrantTypeStrategy => Searching for user with email:\"#{google_user[:email]}\"")
-          resource = mapping.to.find_for_authentication(:email => google_user["email"].to_s)
-          if(!resource)
-            # Create resource if none exist.
-            # TODO: Set this as an option
-            Devise::Oauth2ProvidableGoogle.logger.debug("Oauth2GoogleGrantTypeStrategy => Could not find user\"#{google_user["email"]}\"")
-            resource = mapping.to.create(:email => google_user["email"].to_s, :name => google_user["name"].to_s, :password => SecureRandom.hex())
+        if(google_user)
+          if(google_user["email"] && google_user["verified_email"])
+            Devise::Oauth2ProvidableGoogle.logger.debug("Oauth2GoogleGrantTypeStrategy => Searching for user with email:\"#{google_user[:email]}\"")
+            resource = mapping.to.find_for_authentication(:email => google_user["email"].to_s)
+            if(!resource)
+              # Create resource if none exist.
+              # TODO: Set this as an option
+              Devise::Oauth2ProvidableGoogle.logger.debug("Oauth2GoogleGrantTypeStrategy => Could not find user\"#{google_user["email"]}\"")
+              resource = mapping.to.create(:email => google_user["email"].to_s, :name => google_user["name"].to_s, :password => SecureRandom.hex())
+            end
+          else
+            Devise::Oauth2ProvidableGoogle.logger.debug("Oauth2GoogleGrantTypeStrategy => Unexpected answer from Google: #{google_user}")
+            oauth_error! :invalid_grant, 'could not authenticate to Google'
           end
         else
           Devise::Oauth2ProvidableGoogle.logger.debug("Oauth2GoogleGrantTypeStrategy => Token is not valid")
-          oauth_error! :invalid_grant, 'could not authenticate to Google'
+          oauth_error! :invalid_grant, 'could not communicate with Google'
         end
 
         # Response
